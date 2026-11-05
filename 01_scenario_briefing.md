@@ -13,7 +13,7 @@ At 03:36 a state-backed group, designated NEXUS-35, began a coordinated attack o
 
 ## The three attacks
 
-**Alpha: TLS downgrade on the C2 backbone.** An attacker in the network path is removing the post-quantum part of our hybrid TLS 1.3 handshakes. Sessions fall back to classical X25519 only. The likely aim is to record traffic now and decrypt it once quantum computers can break X25519. ML-KEM itself has not been broken; the attacker is removing it from the handshake.
+**Alpha: TLS downgrade on the C2 backbone.** The attacker has taken over a TLS inspection proxy on the C2 network and is using it to remove the post-quantum part of our hybrid TLS 1.3 handshakes. (TLS 1.3 signs the handshake, so a plain eavesdropper couldn't do this; it needs a box that terminates TLS.) Sessions fall back to classical X25519 only. The likely aim is to record traffic now and decrypt it once quantum computers can break X25519. ML-KEM itself has not been broken; the attacker is removing it from the handshake.
 
 **Beta: Falsified SCADA data at a 400 kV substation.** Tampered firmware, delivered through a supply-chain update, is sending false sensor values to the control room. Operators see normal bearing temperatures while the turbine is pushed above rated speed.
 

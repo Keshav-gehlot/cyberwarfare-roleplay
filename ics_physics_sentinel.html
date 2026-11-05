@@ -6,96 +6,137 @@
 <title>SCADA Physics Sentinel</title>
 <style>
   :root{
-    --bg:#0b1016; --surface:#111a26; --surface-2:#0d1521; --inset:#070c13;
-    --line:#1f2c3e; --line-2:#2c3d55;
-    --ink:#e8eef7; --dim:#8a9ab2; --faint:#56667e;
+    --bg:#0a0f15; --surface:#101923; --surface-2:#0c141e; --inset:#060a10;
+    --line:#1d2a3b; --line-2:#2a3b52;
+    --ink:#e8eef7; --dim:#8b9bb3; --faint:#5a6a82;
     --nominal:#36d29b; --caution:#f5b544; --critical:#ff5a6e;
-    --accent:#2fc4b2;              /* tool identity: turbine / grid teal */
+    --display:"Bahnschrift","DIN Alternate","DIN Next","Barlow Semi Condensed","Segoe UI",system-ui,sans-serif;
     --sans:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
-    --mono:ui-monospace,"Cascadia Code","Consolas","SF Mono",monospace;
+    --mono:"Cascadia Mono","Cascadia Code",ui-monospace,Consolas,"SF Mono",monospace;
   }
   *{box-sizing:border-box}
   html{background:var(--bg);-webkit-text-size-adjust:100%}
-  body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:var(--sans);
-    font-size:16px;line-height:1.55;
-    background-image:radial-gradient(1200px 600px at 80% -10%,rgba(47,196,178,.06),transparent 60%)}
-  .shell{max-width:1080px;margin:0 auto;padding:22px 20px 40px}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;
+    background-image:radial-gradient(1100px 520px at 85% -12%,var(--glow),transparent 62%)}
+  .shell{max-width:1100px;margin:0 auto;padding:16px 20px 40px}
 
-  .mast{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
-    padding-bottom:16px;border-bottom:1px solid var(--line);position:relative;flex-wrap:wrap}
-  .mast::after{content:"";position:absolute;left:0;bottom:-1px;width:140px;height:2px;background:var(--accent)}
-  .tag{font-family:var(--mono);font-size:.72rem;color:var(--accent);letter-spacing:.04em}
-  .mast h1{font-size:1.5rem;font-weight:650;margin:4px 0 2px;letter-spacing:-.01em}
-  .desig{font-size:.9rem;color:var(--dim)}
-  .state{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:.82rem;
-    padding:8px 13px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface-2);white-space:nowrap}
-  .state .dot{width:9px;height:9px;border-radius:50%;background:var(--nominal);box-shadow:0 0 0 4px rgba(54,210,155,.15)}
-  .state.crit{color:var(--critical);border-color:rgba(255,90,110,.4)}
-  .state.crit .dot{background:var(--critical);box-shadow:0 0 0 4px rgba(255,90,110,.16)}
+  /* mission strip */
+  .context{display:flex;align-items:center;gap:18px;flex-wrap:wrap;font-size:.8rem;color:var(--faint);
+    padding-bottom:12px}
+  .context a{color:var(--faint);text-decoration:none}
+  .context a:hover{color:var(--ink)}
+  .ctx-attack{color:var(--accent);font-weight:600}
+  .clock{margin-left:auto;font-family:var(--mono);color:var(--dim);font-variant-numeric:tabular-nums}
 
-  .runs{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
-  .runs button{font:500 .84rem var(--sans);color:var(--ink);background:var(--surface);
-    border:1px solid var(--line-2);border-radius:7px;padding:9px 14px;cursor:pointer}
+  /* masthead */
+  .mast{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding:18px 0 16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .mast h1{font-family:var(--display);font-size:2rem;font-weight:600;line-height:1.1;margin:0;letter-spacing:.005em}
+  .desig{font-size:.95rem;color:var(--dim);margin-top:6px;max-width:62ch}
+  .state{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:1rem;font-weight:600;
+    padding:9px 16px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface-2);white-space:nowrap}
+  .state .dot{width:10px;height:10px;border-radius:50%;background:var(--nominal);box-shadow:0 0 0 4px rgba(54,210,155,.15)}
+  .state.crit{color:var(--critical);border-color:rgba(255,90,110,.45)}
+  .state.crit .dot{background:var(--critical);box-shadow:0 0 0 4px rgba(255,90,110,.18);animation:beat 1.6s ease-in-out infinite}
+  .state.warn{color:var(--caution);border-color:rgba(245,181,68,.45)}
+  .state.warn .dot{background:var(--caution);box-shadow:0 0 0 4px rgba(245,181,68,.15)}
+  @keyframes beat{50%{box-shadow:0 0 0 7px rgba(255,90,110,.05)}}
+
+  /* scenario bar */
+  .runs{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center}
+  .runs button{display:inline-flex;align-items:center;gap:9px;font:500 .9rem var(--sans);color:var(--ink);
+    background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:8px 14px 8px 8px;cursor:pointer}
   .runs button:hover{border-color:var(--accent)}
-  .runs button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .runs button.on{background:var(--accent);border-color:var(--accent);color:#04201c;font-weight:600}
+  .runs button:focus-visible,input:focus-visible,select:focus-visible,.runs .ghost:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .runs button.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+  kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:5px;
+    font:600 .75rem var(--mono);color:var(--dim);background:var(--inset);border:1px solid var(--line-2)}
+  .runs button.on kbd{color:var(--on-accent);background:rgba(255,255,255,.22);border-color:transparent}
+  .runs .hint{margin-left:auto;font-size:.8rem;color:var(--faint)}
 
-  .console{margin-top:18px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
-  .cols{display:grid;grid-template-columns:330px 1fr}
+  /* console */
+  .console{margin-top:16px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+  .cols{display:grid;grid-template-columns:var(--cols,1fr 1fr)}
   @media(max-width:860px){.cols{grid-template-columns:1fr}}
   .pane{padding:20px 22px;min-width:0}
-  .pane+.pane{border-left:1px solid var(--line)}
-  @media(max-width:860px){.pane+.pane{border-left:0;border-top:1px solid var(--line)}}
-  .region{font-size:.74rem;font-weight:600;color:var(--faint);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  .cols>.pane+.pane{border-left:1px solid var(--line)}
+  @media(max-width:860px){.cols>.pane+.pane{border-left:0;border-top:1px solid var(--line)}}
+  .region{font-size:.8rem;font-weight:600;color:var(--dim);margin:0 0 12px;display:flex;align-items:baseline;gap:10px}
+  .region .r{margin-left:auto;font-family:var(--mono);font-weight:400;color:var(--faint)}
 
-  /* readouts */
+  /* verdict */
+  .verdict{border:1px solid var(--line-2);border-radius:10px;background:var(--surface-2);padding:16px 20px;position:relative;overflow:hidden}
+  .verdict::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--nominal)}
+  .verdict.crit::before{background:var(--critical)}
+  .verdict.warn::before{background:var(--caution)}
+  .vstatus{font-family:var(--display);font-size:1.9rem;font-weight:600;line-height:1.1;color:var(--nominal);letter-spacing:.01em}
+  .verdict.crit .vstatus{color:var(--critical)}
+  .verdict.warn .vstatus{color:var(--caution)}
+  .vaction{font-family:var(--mono);font-size:.82rem;color:var(--dim);margin-top:4px}
+  .vreason{font-size:.95rem;margin-top:10px}
+  .verdict.flash{animation:flash .9s ease-out}
+  @keyframes flash{0%{background:rgba(255,90,110,.28)}100%{background:var(--surface-2)}}
+
+  /* event log */
+  .logpane{border-top:1px solid var(--line);padding:16px 22px 18px;background:var(--surface-2)}
+  .log{list-style:none;margin:0;padding:0;font-size:.86rem;min-height:2.2em}
+  .log li{display:grid;grid-template-columns:auto 132px 1fr;gap:14px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line)}
+  .log li:last-child{border-bottom:0}
+  .log li:first-child{animation:in .35s ease-out}
+  .log time{font-family:var(--mono);color:var(--faint);font-variant-numeric:tabular-nums}
+  .log b{font-family:var(--display);font-weight:600;letter-spacing:.02em}
+  .log li.ok b{color:var(--nominal)} .log li.crit b{color:var(--critical)} .log li.warn b{color:var(--caution)}
+  .log span{color:var(--dim)}
+  .log .empty{color:var(--faint);border:0}
+  @keyframes in{from{opacity:0;transform:translateY(-4px)}}
+  @media(max-width:620px){.log li{grid-template-columns:auto 1fr}.log li span{grid-column:1/-1}}
+
+  footer{margin-top:16px;font-size:.8rem;color:var(--faint);line-height:1.6;max-width:90ch}
+  @media(max-width:560px){.mast h1{font-size:1.6rem}.runs .hint{display:none}}
+  @media(prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important}}
+
+  :root{--accent:#2fc4b2;--on-accent:#03201c;--glow:rgba(47,196,178,.07);--cols:340px 1fr}
+
   .ro{padding:12px 0;border-bottom:1px solid var(--line)}
   .ro:first-of-type{padding-top:0}
   .ro-top{display:flex;justify-content:space-between;align-items:baseline}
-  .ro-name{font-size:.86rem;color:var(--dim)}
-  .ro-val{font-family:var(--mono);font-size:1.35rem;font-weight:600;font-variant-numeric:tabular-nums}
-  .ro-val small{font-size:.75rem;color:var(--dim);font-weight:400;margin-left:3px}
+  .ro-name{font-size:.9rem;color:var(--dim)}
+  .ro-val{font-family:var(--display);font-size:1.7rem;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+  .ro-val small{font-family:var(--sans);font-size:.78rem;color:var(--dim);font-weight:400;margin-left:4px}
   .ro.bad .ro-val{color:var(--critical)}
-  .ro-lim{font-size:.72rem;color:var(--faint);margin-top:1px}
+  .ro-lim{font-size:.76rem;color:var(--faint);margin-top:2px}
   input[type=range]{width:100%;accent-color:var(--accent);height:26px;margin-top:4px}
 
-  .frame{margin-top:18px;background:var(--inset);border:1px solid var(--line-2);border-radius:8px;
-    padding:11px 12px;font-family:var(--mono);font-size:.74rem;line-height:1.7;word-break:break-all}
+  .frame{margin-top:6px;background:var(--inset);border:1px solid var(--line-2);border-radius:8px;padding:11px 12px;font:.76rem/1.7 var(--mono);word-break:break-all}
   .frame .h{color:var(--accent)} .frame .fc{color:var(--caution)} .frame .r{color:var(--ink)}
-  .frame-key{display:flex;gap:14px;flex-wrap:wrap;font-size:.7rem;color:var(--faint);margin-top:7px}
-  .frame-key b{font-weight:500}
+  .frame-key{display:flex;gap:14px;flex-wrap:wrap;font-size:.74rem;color:var(--faint);margin-top:7px}
 
-  /* verdict */
-  .verdict{border:1px solid var(--line-2);border-left:4px solid var(--nominal);border-radius:9px;
-    background:var(--surface-2);padding:16px 20px;display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
-  .verdict.crit{border-left-color:var(--critical)}
-  .vstatus{font-size:1.45rem;font-weight:700;color:var(--nominal);letter-spacing:-.01em;min-width:190px}
-  .verdict.crit .vstatus{color:var(--critical)}
-  .vreason{flex:1;min-width:220px;font-size:.92rem;padding-top:4px}
+  .vrow{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+  .vrow .vstatus{min-width:200px}
+  .vrow .vreason{flex:1;min-width:220px;margin-top:4px}
 
-  /* envelope chart */
-  .chartwrap{margin-top:18px}
   svg.env{width:100%;height:auto;display:block}
   .env text{font-family:var(--mono);font-size:11px;fill:var(--faint)}
   .env .axis-t{font-family:var(--sans);font-size:12px;fill:var(--dim)}
-  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:.76rem;color:var(--dim);margin-top:8px}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:.8rem;color:var(--dim);margin-top:8px}
   .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-2px}
 
-  /* frequency strip */
-  .fstrip{margin-top:22px}
   .fbar{position:relative;height:30px;background:var(--inset);border:1px solid var(--line-2);border-radius:7px}
   .fband{position:absolute;top:0;bottom:0;background:rgba(54,210,155,.16);border-left:1px solid var(--nominal);border-right:1px solid var(--nominal)}
   .fneedle{position:absolute;top:-5px;bottom:-5px;width:3px;margin-left:-1.5px;background:var(--ink);border-radius:2px;transition:left .25s ease}
   .fneedle.bad{background:var(--critical)}
-  .fticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.68rem;color:var(--faint);margin-top:5px}
-
-  @media(max-width:560px){.mast{align-items:flex-start}.mast h1{font-size:1.3rem}}
-  footer{margin-top:18px;font-size:.76rem;color:var(--faint);line-height:1.7}
-  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  .fticks{position:relative;height:18px;font:.7rem var(--mono);color:var(--faint);margin-top:5px}
+  .fticks span{position:absolute;transform:translateX(-50%)}
+  .fticks span:first-child{transform:none} .fticks span:last-child{transform:translateX(-100%)}
 </style>
 </head>
 <body>
 <div class="shell">
+  <div class="context">
+    <a href="index.html">Operation Chimera Dawn</a>
+    <span class="ctx-attack">Attack 2 of 3: northern 400 kV substation</span>
+    <span class="clock" id="clock">03:42:00 IST</span>
+  </div>
   <header class="mast">
     <div>
       <h1>SCADA Physics Sentinel</h1>
@@ -105,17 +146,17 @@
   </header>
 
   <div class="runs" id="runs">
-    <button data-r="3000" data-t="68" data-f="50.00" class="on">Rated operation</button>
-    <button data-r="3150" data-t="22" data-f="50.00">Hydra-35 sensor spoof</button>
-    <button data-r="3380" data-t="71" data-f="50.04">Overspeed</button>
-    <button data-r="3000" data-t="68" data-f="50.12">Grid frequency drift</button>
+    <button data-r="3000" data-t="68" data-f="50.00" class="on"><kbd>1</kbd>Rated operation</button>
+    <button data-r="3150" data-t="22" data-f="50.00"><kbd>2</kbd>Hydra-35 sensor spoof</button>
+    <button data-r="3380" data-t="71" data-f="50.04"><kbd>3</kbd>Overspeed</button>
+    <button data-r="3000" data-t="68" data-f="50.12"><kbd>4</kbd>Grid frequency drift</button>
+    <span class="hint">Press 1 to 4 to switch</span>
   </div>
 
   <div class="console">
     <div class="cols">
       <section class="pane">
         <p class="region">Reported by the PLC</p>
-
         <div class="ro" id="roR">
           <div class="ro-top"><span class="ro-name">Turbine speed</span><span class="ro-val"><span id="vR">3000</span><small>RPM</small></span></div>
           <div class="ro-lim">Rated 3000, trips above 3300</div>
@@ -123,144 +164,149 @@
         </div>
         <div class="ro" id="roT">
           <div class="ro-top"><span class="ro-name">Bearing temperature</span><span class="ro-val"><span id="vT">68</span><small>&deg;C</small></span></div>
-          <div class="ro-lim">thermal trip 90 &deg;C</div>
+          <div class="ro-lim">Trips above 90 &deg;C</div>
           <input type="range" id="t" min="10" max="120" value="68" step="1" aria-label="Bearing temperature">
         </div>
         <div class="ro" id="roF" style="border-bottom:0">
           <div class="ro-top"><span class="ro-name">Grid frequency</span><span class="ro-val"><span id="vF">50.00</span><small>Hz</small></span></div>
-          <div class="ro-lim">IEGC 2023 band 49.90 – 50.05</div>
+          <div class="ro-lim">IEGC 2023 band 49.90 to 50.05</div>
           <input type="range" id="f" min="49.70" max="50.30" value="50.00" step="0.01" aria-label="Grid frequency">
         </div>
 
-        <p class="region" style="margin-top:16px">Modbus/TCP frame on the wire</p>
+        <p class="region" style="margin-top:14px">Modbus/TCP frame on the wire</p>
         <div class="frame" id="frame"></div>
         <div class="frame-key">
-          <span><b style="color:var(--accent)">MBAP header</b></span>
-          <span><b style="color:var(--caution)">FC 0x03</b></span>
-          <span><b style="color:var(--ink)">3 × float32 BE</b></span>
+          <span style="color:var(--accent)">MBAP header</span>
+          <span style="color:var(--caution)">Function 0x03</span>
+          <span style="color:var(--ink)">3 float32 values</span>
         </div>
       </section>
 
       <section class="pane">
         <div class="verdict" id="verdict">
-          <div class="vstatus" id="vstatus">NOMINAL</div>
-          <div class="vreason" id="vreason">All physical invariants satisfied.</div>
-        </div>
-
-        <div class="chartwrap">
-          <p class="region" style="margin-top:20px">Speed against bearing temperature</p>
-          <svg class="env" id="env" viewBox="0 0 640 330" role="img" aria-label="Operating envelope chart"></svg>
-          <div class="legend">
-            <span><i style="background:rgba(54,210,155,.22);border:1px solid var(--nominal)"></i>Physically possible</span>
-            <span><i style="background:rgba(255,90,110,.12);border:1px solid rgba(255,90,110,.5)"></i>Impossible or unsafe</span>
-            <span><i style="background:var(--ink);border-radius:50%"></i>Reported state</span>
+          <div class="vrow">
+            <div class="vstatus" id="vstatus">NOMINAL</div>
+            <div class="vreason" id="vreason">All physical checks pass.</div>
           </div>
         </div>
 
-        <div class="fstrip">
-          <p class="region">Grid frequency</p>
-          <div class="fbar" id="fbar"><div class="fband" id="fband"></div><div class="fneedle" id="fneedle"></div></div>
-          <div class="fticks"><span>49.70</span><span>49.90</span><span>50.00</span><span>50.05</span><span>50.30 Hz</span></div>
+        <p class="region" style="margin-top:20px">Speed against bearing temperature</p>
+        <svg class="env" id="env" viewBox="0 0 640 320" role="img" aria-label="Operating envelope chart"></svg>
+        <div class="legend">
+          <span><i style="background:rgba(54,210,155,.22);border:1px solid var(--nominal)"></i>Physically possible</span>
+          <span><i style="background:rgba(255,90,110,.12);border:1px solid rgba(255,90,110,.5)"></i>Impossible or unsafe</span>
+          <span><i style="background:var(--ink);border-radius:50%"></i>Reported state</span>
         </div>
+
+        <p class="region" style="margin-top:20px">Grid frequency</p>
+        <div class="fbar"><div class="fband" id="fband"></div><div class="fneedle" id="fneedle"></div></div>
+        <div class="fticks" id="fticks"></div>
       </section>
+    </div>
+    <div class="logpane">
+      <p class="region">Event log<span class="r">newest first</span></p>
+      <ul class="log" id="log"><li class="empty">No events yet. Pick a scenario.</li></ul>
     </div>
   </div>
 
-  <footer>
-    Frequency band from IEGC 2023. Temperature limits are example values, and readings are simulated.
-  </footer>
+  <footer>Frequency band from IEGC 2023. The bearing temperature model is an example, not taken from a real machine. Readings are simulated.</footer>
 </div>
 
 <script>
-const RATED=3000,OVERSPEED=3300,TMAX=90,FMIN=49.90,FMAX=50.05,SPIN=1500,TOL=15;
-const el=id=>document.getElementById(id);
-const floorTemp=r=>30+(r/RATED)*30;
+// Shared console behaviour: scenario clock, event log, verdict flash, number keys.
+const Console=(()=>{
+  const $=id=>document.getElementById(id);
+  const start=Date.now(), base=3*3600+42*60;           // scenario starts at 03:42:00 IST
+  const clock=()=>{const s=base+Math.floor((Date.now()-start)/1000);
+    return [Math.floor(s/3600)%24,Math.floor(s/60)%60,s%60].map(n=>String(n).padStart(2,'0')).join(':');};
+  const tick=()=>{const c=$('clock'); if(c) c.textContent=clock()+" IST";};
+  tick(); setInterval(tick,1000);
 
-function f32(x){const b=new ArrayBuffer(4);new DataView(b).setFloat32(0,x,false);
-  return [...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,'0')).join('');}
+  let shown=null, pending=null, timer=null;
+  // level: verdict word; tone: 'ok' | 'warn' | 'crit'. Logged once the verdict settles (no spam while dragging a slider).
+  function report(level,msg,tone){
+    const key=level+"|"+msg; if(key===pending) return;   // same verdict again (e.g. live stream): keep the timer running
+    pending=key; clearTimeout(timer);
+    timer=setTimeout(()=>{ if(pending===shown) return; shown=pending; add(level,msg,tone); if(tone==='crit') flash(); },260);
+  }
+  function add(level,msg,tone){
+    const ul=$('log'); if(!ul) return;
+    const e=ul.querySelector('.empty'); if(e) e.remove();
+    const li=document.createElement('li'); li.className=tone;
+    li.innerHTML='<time></time><b></b><span></span>';
+    li.children[0].textContent=clock(); li.children[1].textContent=level; li.children[2].textContent=msg;
+    ul.prepend(li); while(ul.children.length>6) ul.lastElementChild.remove();
+  }
+  function flash(){const v=$('verdict'); if(!v) return; v.classList.remove('flash'); void v.offsetWidth; v.classList.add('flash');}
+  function keys(buttons,extra){
+    document.addEventListener('keydown',e=>{
+      if(e.target.matches('input,select,textarea')||e.ctrlKey||e.metaKey||e.altKey) return;
+      const n=parseInt(e.key,10);
+      if(n>=1&&n<=buttons.length){buttons[n-1].click();e.preventDefault();}
+      else if(extra) extra(e);
+    });
+  }
+  return {report,keys};
+})();
+
+const RATED=3000,OVERSPEED=3300,TMAX=90,FMIN=49.90,FMAX=50.05,SPIN=1500,TOL=15;
+const $=id=>document.getElementById(id);
+const floorTemp=r=>30+(r/RATED)*30;
+function f32(x){const b=new ArrayBuffer(4);new DataView(b).setFloat32(0,x,false);return [...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,'0')).join('');}
 const hx=(v,n)=>v.toString(16).padStart(n,'0');
 
-// envelope chart geometry
-const W=640,H=330,L=52,R=16,T=14,B=44;
-const RMAX=3600,TMIN=10,TMX=120;
+const W=640,H=320,L=52,R=16,T=14,B=44,RMAX=3600,TMIN=10,TMX=120;
 const sx=r=>L+(r/RMAX)*(W-L-R), sy=t=>T+(1-(t-TMIN)/(TMX-TMIN))*(H-T-B);
-
 function drawEnvelope(rpm,t,crit){
-  let s="";
-  // full plot = unsafe background
-  s+=`<rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}" fill="rgba(255,90,110,.07)"/>`;
-  // possible region: rpm<=OVERSPEED, t<=TMAX, and (rpm<=SPIN or t>=floor-TOL)
-  const pts=[];
-  pts.push([0,TMIN]); pts.push([SPIN,TMIN]);
-  pts.push([SPIN,Math.max(TMIN,floorTemp(SPIN)-TOL)]);
-  pts.push([OVERSPEED,floorTemp(OVERSPEED)-TOL]);
-  pts.push([OVERSPEED,TMAX]); pts.push([0,TMAX]);
+  let s=`<rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}" fill="rgba(255,90,110,.07)"/>`;
+  const pts=[[0,TMIN],[SPIN,TMIN],[SPIN,Math.max(TMIN,floorTemp(SPIN)-TOL)],[OVERSPEED,floorTemp(OVERSPEED)-TOL],[OVERSPEED,TMAX],[0,TMAX]];
   s+=`<polygon points="${pts.map(p=>sx(p[0])+','+sy(p[1])).join(' ')}" fill="rgba(54,210,155,.15)" stroke="#36d29b" stroke-width="1.2"/>`;
-  // grid
-  for(let r=0;r<=3600;r+=600){s+=`<line x1="${sx(r)}" y1="${T}" x2="${sx(r)}" y2="${H-B}" stroke="#1f2c3e"/>`;
-    s+=`<text x="${sx(r)}" y="${H-B+16}" text-anchor="middle">${r}</text>`;}
-  for(let tt=20;tt<=120;tt+=20){s+=`<line x1="${L}" y1="${sy(tt)}" x2="${W-R}" y2="${sy(tt)}" stroke="#1f2c3e"/>`;
-    s+=`<text x="${L-8}" y="${sy(tt)+4}" text-anchor="end">${tt}</text>`;}
-  // reference lines
-  s+=`<line x1="${sx(RATED)}" y1="${T}" x2="${sx(RATED)}" y2="${H-B}" stroke="#2fc4b2" stroke-dasharray="4 4"/>`;
-  s+=`<text x="${sx(RATED)-4}" y="${T+12}" text-anchor="end" style="fill:#2fc4b2">rated</text>`;
-  s+=`<line x1="${sx(OVERSPEED)}" y1="${T}" x2="${sx(OVERSPEED)}" y2="${H-B}" stroke="#ff5a6e" stroke-dasharray="4 4"/>`;
-  s+=`<text x="${sx(OVERSPEED)+4}" y="${T+12}" style="fill:#ff5a6e">trip</text>`;
-  // axis titles
+  for(let r=0;r<=3600;r+=600){s+=`<line x1="${sx(r)}" y1="${T}" x2="${sx(r)}" y2="${H-B}" stroke="#1d2a3b"/><text x="${sx(r)}" y="${H-B+16}" text-anchor="middle">${r}</text>`;}
+  for(let tt=20;tt<=120;tt+=20){s+=`<line x1="${L}" y1="${sy(tt)}" x2="${W-R}" y2="${sy(tt)}" stroke="#1d2a3b"/><text x="${L-8}" y="${sy(tt)+4}" text-anchor="end">${tt}</text>`;}
+  s+=`<line x1="${sx(RATED)}" y1="${T}" x2="${sx(RATED)}" y2="${H-B}" stroke="#2fc4b2" stroke-dasharray="4 4"/><text x="${sx(RATED)-4}" y="${T+12}" text-anchor="end" style="fill:#2fc4b2">rated</text>`;
+  s+=`<line x1="${sx(OVERSPEED)}" y1="${T}" x2="${sx(OVERSPEED)}" y2="${H-B}" stroke="#ff5a6e" stroke-dasharray="4 4"/><text x="${sx(OVERSPEED)+4}" y="${T+12}" style="fill:#ff5a6e">trip</text>`;
   s+=`<text class="axis-t" x="${(L+W-R)/2}" y="${H-6}" text-anchor="middle">Turbine speed (RPM)</text>`;
   s+=`<text class="axis-t" transform="translate(14,${(T+H-B)/2}) rotate(-90)" text-anchor="middle">Bearing temp (°C)</text>`;
-  // point
-  const px=sx(Math.min(rpm,RMAX)), py=sy(Math.max(TMIN,Math.min(t,TMX)));
-  const c=crit?"#ff5a6e":"#e8eef7";
-  s+=`<circle cx="${px}" cy="${py}" r="14" fill="${c}" opacity=".16"/>`;
-  s+=`<circle cx="${px}" cy="${py}" r="6" fill="${c}" stroke="#0b1016" stroke-width="2"/>`;
-  el('env').innerHTML=s;
+  const px=sx(Math.min(rpm,RMAX)),py=sy(Math.max(TMIN,Math.min(t,TMX))),c=crit?"#ff5a6e":"#e8eef7";
+  s+=`<circle cx="${px}" cy="${py}" r="15" fill="${c}" opacity=".16"/><circle cx="${px}" cy="${py}" r="6.5" fill="${c}" stroke="#0a0f15" stroke-width="2"/>`;
+  $('env').innerHTML=s;
 }
+const FL=49.70,FH=50.30,pos=x=>(x-FL)/(FH-FL)*100;
+$('fticks').innerHTML=[49.70,49.90,50.00,50.05,50.30].map(v=>`<span style="left:${pos(v)}%">${v.toFixed(2)}</span>`).join('');
 
 function render(){
-  const rpm=+el('rpm').value, t=+el('t').value, f=+el('f').value;
-  el('vR').textContent=rpm; el('vT').textContent=t; el('vF').textContent=f.toFixed(2);
+  const rpm=+$('rpm').value,t=+$('t').value,f=+$('f').value;
+  $('vR').textContent=rpm;$('vT').textContent=t;$('vF').textContent=f.toFixed(2);
   const floor=floorTemp(rpm);
-
-  // frame
-  const pdu=f32(rpm)+f32(t)+f32(f);
-  const mbap=hx(102,4)+hx(0,4)+hx(pdu.length/2+2,4)+hx(1,2);
-  el('frame').innerHTML=`<span class="h">${mbap}</span><span class="fc">03</span><span class="r">${pdu}</span>`;
+  const pdu=f32(rpm)+f32(t)+f32(f), mbap=hx(102,4)+hx(0,4)+hx(pdu.length/2+2,4)+hx(1,2);
+  $('frame').innerHTML=`<span class="h">${mbap}</span><span class="fc">03</span><span class="r">${pdu}</span>`;
 
   // same rules and order as ics_physics_sentinel.py
-  let v="NOMINAL",reason="All physical invariants satisfied.",crit=false;
-  const spoof=rpm>SPIN && t<floor-TOL;
-  if(rpm>OVERSPEED){v="INTERLOCK TRIP";crit=true;reason=`Mechanical overspeed: ${rpm} RPM is above the ${OVERSPEED} RPM trip.`;}
-  else if(spoof){v="INTERLOCK TRIP";crit=true;
-    reason=`Physics violation: ${rpm} RPM with a ${t} °C bearing is impossible (expected at least ~${floor.toFixed(0)} °C). The SCADA telemetry is falsified.`;}
-  else if(t>TMAX){v="INTERLOCK TRIP";crit=true;reason=`Bearing over-temperature: ${t} °C is above the ${TMAX} °C trip.`;}
-  else if(f<FMIN||f>FMAX){v="GRID ANOMALY";crit=true;reason=`Grid frequency ${f.toFixed(2)} Hz is outside the IEGC band ${FMIN.toFixed(2)}–${FMAX.toFixed(2)} Hz.`;}
+  let v="NOMINAL",reason="All physical checks pass.",tone="ok",short="all checks pass";
+  if(rpm>OVERSPEED){v="INTERLOCK TRIP";tone="crit";short="overspeed";reason=`Overspeed: ${rpm} RPM is above the ${OVERSPEED} RPM trip.`;}
+  else if(rpm>SPIN&&t<floor-TOL){v="INTERLOCK TRIP";tone="crit";short="speed and temperature don't match";
+    reason=`${rpm} RPM with a ${t} °C bearing is physically impossible. At that speed it should be at least about ${floor.toFixed(0)} °C, so the SCADA data is false.`;}
+  else if(t>TMAX){v="INTERLOCK TRIP";tone="crit";short="bearing over-temperature";reason=`Bearing over-temperature: ${t} °C is above the ${TMAX} °C trip.`;}
+  else if(f<FMIN||f>FMAX){v="GRID ANOMALY";tone="warn";short="frequency outside band";reason=`Grid frequency ${f.toFixed(2)} Hz is outside the IEGC band of ${FMIN.toFixed(2)} to ${FMAX.toFixed(2)} Hz.`;}
 
-  el('verdict').className="verdict"+(crit?" crit":"");
-  el('vstatus').textContent=v; el('vreason').textContent=reason;
-  el('state').className="state"+(crit?" crit":"");
-  el('stateTxt').textContent=crit?(v==="GRID ANOMALY"?"Grid anomaly":"Interlock tripped"):"Plant normal";
-
-  // individual readouts: only flag a value that is out of limits ON ITS OWN
-  el('roR').className="ro"+(rpm>OVERSPEED?" bad":"");
-  el('roT').className="ro"+(t>TMAX?" bad":"");
-  el('roF').className="ro"+((f<FMIN||f>FMAX)?" bad":"");
-
-  drawEnvelope(rpm,t,crit&&v!=="GRID ANOMALY");
-
-  // freq strip
-  const FL=49.70,FH=50.30,pos=x=>(x-FL)/(FH-FL)*100;
-  el('fband').style.left=pos(FMIN)+"%"; el('fband').style.width=(pos(FMAX)-pos(FMIN))+"%";
-  el('fneedle').style.left=Math.max(0,Math.min(100,pos(f)))+"%";
-  el('fneedle').className="fneedle"+((f<FMIN||f>FMAX)?" bad":"");
+  $('verdict').className="verdict"+(tone==='ok'?"":" "+tone);
+  $('vstatus').textContent=v;$('vreason').textContent=reason;
+  $('state').className="state"+(tone==='ok'?"":" "+tone);
+  $('stateTxt').textContent=tone==='crit'?"Interlock tripped":tone==='warn'?"Grid anomaly":"Plant normal";
+  $('roR').className="ro"+(rpm>OVERSPEED?" bad":"");
+  $('roT').className="ro"+(t>TMAX?" bad":"");
+  $('roF').className="ro"+((f<FMIN||f>FMAX)?" bad":"");
+  drawEnvelope(rpm,t,tone==='crit');
+  $('fband').style.left=pos(FMIN)+"%";$('fband').style.width=(pos(FMAX)-pos(FMIN))+"%";
+  $('fneedle').style.left=Math.max(0,Math.min(100,pos(f)))+"%";
+  $('fneedle').className="fneedle"+((f<FMIN||f>FMAX)?" bad":"");
+  Console.report(v,`Unit 1 at ${rpm} RPM, ${t} °C, ${f.toFixed(2)} Hz: ${short}`,tone);
 }
-
 const runs=[...document.querySelectorAll('#runs button')];
-runs.forEach(b=>b.addEventListener('click',()=>{
-  el('rpm').value=b.dataset.r; el('t').value=b.dataset.t; el('f').value=b.dataset.f;
-  runs.forEach(x=>x.classList.toggle('on',x===b)); render();
-}));
-['rpm','t','f'].forEach(id=>el(id).addEventListener('input',()=>{runs.forEach(x=>x.classList.remove('on'));render();}));
+runs.forEach(b=>b.addEventListener('click',()=>{$('rpm').value=b.dataset.r;$('t').value=b.dataset.t;$('f').value=b.dataset.f;
+  runs.forEach(x=>x.classList.toggle('on',x===b));render();}));
+['rpm','t','f'].forEach(id=>$(id).addEventListener('input',()=>{runs.forEach(x=>x.classList.remove('on'));render();}));
+Console.keys(runs);
 render();
 </script>
 </body>

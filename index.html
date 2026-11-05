@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operation Chimera Dawn</title>
+<style>
+  :root{
+    --bg:#0a0f15; --surface:#101923; --surface-2:#0c141e; --inset:#060a10;
+    --line:#1d2a3b; --line-2:#2a3b52;
+    --ink:#e8eef7; --dim:#8b9bb3; --faint:#5a6a82;
+    --nominal:#36d29b; --caution:#f5b544; --critical:#ff5a6e;
+    --display:"Bahnschrift","DIN Alternate","DIN Next","Barlow Semi Condensed","Segoe UI",system-ui,sans-serif;
+    --sans:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    --mono:"Cascadia Mono","Cascadia Code",ui-monospace,Consolas,"SF Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html{background:var(--bg);-webkit-text-size-adjust:100%}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;
+    background-image:radial-gradient(1100px 520px at 85% -12%,var(--glow),transparent 62%)}
+  .shell{max-width:1100px;margin:0 auto;padding:16px 20px 40px}
+
+  /* mission strip */
+  .context{display:flex;align-items:center;gap:18px;flex-wrap:wrap;font-size:.8rem;color:var(--faint);
+    padding-bottom:12px}
+  .context a{color:var(--faint);text-decoration:none}
+  .context a:hover{color:var(--ink)}
+  .ctx-attack{color:var(--accent);font-weight:600}
+  .clock{margin-left:auto;font-family:var(--mono);color:var(--dim);font-variant-numeric:tabular-nums}
+
+  /* masthead */
+  .mast{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding:18px 0 16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .mast h1{font-family:var(--display);font-size:2rem;font-weight:600;line-height:1.1;margin:0;letter-spacing:.005em}
+  .desig{font-size:.95rem;color:var(--dim);margin-top:6px;max-width:62ch}
+  .state{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:1rem;font-weight:600;
+    padding:9px 16px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface-2);white-space:nowrap}
+  .state .dot{width:10px;height:10px;border-radius:50%;background:var(--nominal);box-shadow:0 0 0 4px rgba(54,210,155,.15)}
+  .state.crit{color:var(--critical);border-color:rgba(255,90,110,.45)}
+  .state.crit .dot{background:var(--critical);box-shadow:0 0 0 4px rgba(255,90,110,.18);animation:beat 1.6s ease-in-out infinite}
+  .state.warn{color:var(--caution);border-color:rgba(245,181,68,.45)}
+  .state.warn .dot{background:var(--caution);box-shadow:0 0 0 4px rgba(245,181,68,.15)}
+  @keyframes beat{50%{box-shadow:0 0 0 7px rgba(255,90,110,.05)}}
+
+  /* scenario bar */
+  .runs{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center}
+  .runs button{display:inline-flex;align-items:center;gap:9px;font:500 .9rem var(--sans);color:var(--ink);
+    background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:8px 14px 8px 8px;cursor:pointer}
+  .runs button:hover{border-color:var(--accent)}
+  .runs button:focus-visible,input:focus-visible,select:focus-visible,.runs .ghost:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .runs button.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+  kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:5px;
+    font:600 .75rem var(--mono);color:var(--dim);background:var(--inset);border:1px solid var(--line-2)}
+  .runs button.on kbd{color:var(--on-accent);background:rgba(255,255,255,.22);border-color:transparent}
+  .runs .hint{margin-left:auto;font-size:.8rem;color:var(--faint)}
+
+  /* console */
+  .console{margin-top:16px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+  .cols{display:grid;grid-template-columns:var(--cols,1fr 1fr)}
+  @media(max-width:860px){.cols{grid-template-columns:1fr}}
+  .pane{padding:20px 22px;min-width:0}
+  .cols>.pane+.pane{border-left:1px solid var(--line)}
+  @media(max-width:860px){.cols>.pane+.pane{border-left:0;border-top:1px solid var(--line)}}
+  .region{font-size:.8rem;font-weight:600;color:var(--dim);margin:0 0 12px;display:flex;align-items:baseline;gap:10px}
+  .region .r{margin-left:auto;font-family:var(--mono);font-weight:400;color:var(--faint)}
+
+  /* verdict */
+  .verdict{border:1px solid var(--line-2);border-radius:10px;background:var(--surface-2);padding:16px 20px;position:relative;overflow:hidden}
+  .verdict::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--nominal)}
+  .verdict.crit::before{background:var(--critical)}
+  .verdict.warn::before{background:var(--caution)}
+  .vstatus{font-family:var(--display);font-size:1.9rem;font-weight:600;line-height:1.1;color:var(--nominal);letter-spacing:.01em}
+  .verdict.crit .vstatus{color:var(--critical)}
+  .verdict.warn .vstatus{color:var(--caution)}
+  .vaction{font-family:var(--mono);font-size:.82rem;color:var(--dim);margin-top:4px}
+  .vreason{font-size:.95rem;margin-top:10px}
+  .verdict.flash{animation:flash .9s ease-out}
+  @keyframes flash{0%{background:rgba(255,90,110,.28)}100%{background:var(--surface-2)}}
+
+  /* event log */
+  .logpane{border-top:1px solid var(--line);padding:16px 22px 18px;background:var(--surface-2)}
+  .log{list-style:none;margin:0;padding:0;font-size:.86rem;min-height:2.2em}
+  .log li{display:grid;grid-template-columns:auto 132px 1fr;gap:14px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line)}
+  .log li:last-child{border-bottom:0}
+  .log li:first-child{animation:in .35s ease-out}
+  .log time{font-family:var(--mono);color:var(--faint);font-variant-numeric:tabular-nums}
+  .log b{font-family:var(--display);font-weight:600;letter-spacing:.02em}
+  .log li.ok b{color:var(--nominal)} .log li.crit b{color:var(--critical)} .log li.warn b{color:var(--caution)}
+  .log span{color:var(--dim)}
+  .log .empty{color:var(--faint);border:0}
+  @keyframes in{from{opacity:0;transform:translateY(-4px)}}
+  @media(max-width:620px){.log li{grid-template-columns:auto 1fr}.log li span{grid-column:1/-1}}
+
+  footer{margin-top:16px;font-size:.8rem;color:var(--faint);line-height:1.6;max-width:90ch}
+  @media(max-width:560px){.mast h1{font-size:1.6rem}.runs .hint{display:none}}
+  @media(prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important}}
+
+  :root{--accent:#e8eef7;--on-accent:#0a0f15;--glow:rgba(120,140,255,.08)}
+  .hero{padding:44px 0 30px;border-top:1px solid var(--line)}
+  .lights{display:flex;gap:8px;margin-bottom:22px}
+  .lights i{width:14px;height:14px;border-radius:50%}
+  .hero h1{font-family:var(--display);font-size:clamp(2.4rem,6vw,4rem);font-weight:600;line-height:1;margin:0;letter-spacing:.005em}
+  .hero p{font-size:1.1rem;color:var(--dim);max-width:60ch;margin:14px 0 0}
+
+  .apps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:900px){.apps{grid-template-columns:1fr}}
+  .app{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;color:inherit;text-decoration:none;
+    transition:border-color .15s ease,transform .15s ease}
+  .app:hover{border-color:var(--c);transform:translateY(-2px)}
+  .app:focus-visible{outline:2px solid var(--c);outline-offset:3px}
+  .app .which{font-size:.82rem;font-weight:600;color:var(--c)}
+  .app h2{font-family:var(--display);font-size:1.45rem;font-weight:600;line-height:1.15;margin:6px 0 8px}
+  .app p{font-size:.92rem;color:var(--dim);margin:0 0 16px}
+  .glyph{height:86px;background:var(--inset);border:1px solid var(--line-2);border-radius:8px;margin-bottom:16px;overflow:hidden}
+  .glyph svg{width:100%;height:100%;display:block}
+  .cmd{margin-top:auto;font:.8rem var(--mono);color:var(--dim);background:var(--inset);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+  .open{margin-top:12px;font-weight:600;font-size:.92rem;color:var(--c)}
+
+  .more{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+  @media(max-width:760px){.more{grid-template-columns:1fr}}
+  .box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+  .box h3{font-size:.92rem;margin:0 0 10px;color:var(--ink)}
+  .box ol,.box ul{margin:0;padding-left:20px;color:var(--dim);font-size:.92rem}
+  .box li{margin:4px 0}
+  .box a{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="context">
+    <span>Cyber Warfare 2035 demo</span>
+    <span class="clock" id="clock">03:42:00 IST</span>
+  </div>
+
+  <section class="hero">
+    <div class="lights"><i style="background:#5b8cff"></i><i style="background:#2fc4b2"></i><i style="background:#9d86ff"></i></div>
+    <h1>Operation Chimera Dawn</h1>
+    <p>One attacker, three systems, three detectors. Open them in this order during the role-play. Each one also works on its own.</p>
+  </section>
+
+  <div class="apps">
+    <a class="app" href="pq_downgrade_guard.html" style="--c:#5b8cff">
+      <span class="which">Attack 1 of 3: C2 backbone</span>
+      <h2>Post-Quantum Handshake Sentinel</h2>
+      <p>Catches TLS sessions where the ML-KEM key has been removed.</p>
+      <div class="glyph"><svg viewBox="0 0 300 86" preserveAspectRatio="none">
+        <rect x="16" y="22" width="230" height="16" rx="3" fill="#5b8cff"/><rect x="246" y="22" width="8" height="16" fill="#38c7d8"/>
+        <rect x="16" y="50" width="8" height="16" fill="#38c7d8"/><rect x="24" y="50" width="230" height="16" fill="#3a1a28" stroke="#ff5a6e" stroke-dasharray="4 3"/></svg></div>
+      <div class="cmd">python pq_downgrade_guard.py</div>
+      <span class="open">Open dashboard</span>
+    </a>
+    <a class="app" href="ics_physics_sentinel.html" style="--c:#2fc4b2">
+      <span class="which">Attack 2 of 3: 400 kV substation</span>
+      <h2>SCADA Physics Sentinel</h2>
+      <p>Catches sensor readings that can't all be true at once.</p>
+      <div class="glyph"><svg viewBox="0 0 300 86" preserveAspectRatio="none">
+        <polygon points="16,74 120,74 120,58 240,44 240,14 16,14" fill="rgba(54,210,155,.16)" stroke="#36d29b"/>
+        <circle cx="228" cy="68" r="6" fill="#ff5a6e"/><circle cx="228" cy="68" r="12" fill="#ff5a6e" opacity=".18"/></svg></div>
+      <div class="cmd">python ics_physics_sentinel.py</div>
+      <span class="open">Open dashboard</span>
+    </a>
+    <a class="app" href="sar_jitter_analyzer.html" style="--c:#9d86ff">
+      <span class="which">Attack 3 of 3: western ground station</span>
+      <h2>SAR Telemetry Jitter Analyzer</h2>
+      <p>Catches satellite feeds whose noise is too regular to be real.</p>
+      <div class="glyph"><svg viewBox="0 0 300 86" preserveAspectRatio="none">
+        <polyline points="16,40 30,22 44,52 58,30 72,60 86,26 100,48 114,34 128,56 142,28" fill="none" stroke="#7ef0c9" stroke-width="2"/>
+        <polyline points="158,43 284,43" fill="none" stroke="#ff5a6e" stroke-width="2"/></svg></div>
+      <div class="cmd">python sar_jitter_analyzer.py</div>
+      <span class="open">Open dashboard</span>
+    </a>
+  </div>
+
+  <div class="more">
+    <div class="box">
+      <h3>Presenting</h3>
+      <ol>
+        <li>Act out the role-play from the script.</li>
+        <li>At each demo cue, run the script, then open its dashboard.</li>
+        <li>In a dashboard, press 1 to 4 to switch scenarios. In the satellite app, Space pauses the stream.</li>
+        <li>Finish with the slides.</li>
+      </ol>
+    </div>
+    <div class="box">
+      <h3>Other files in this folder</h3>
+      <ul>
+        <li><a href="03_roleplay_script.docx">03_roleplay_script.docx</a>, the role-play script</li>
+        <li><a href="04_presentation.pptx">04_presentation.pptx</a>, the slides</li>
+        <li><a href="02_viva_prep.md">02_viva_prep.md</a>, likely questions and answers</li>
+        <li><a href="01_scenario_briefing.md">01_scenario_briefing.md</a> and <a href="README.md">README.md</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+<script>
+// Shared console behaviour: scenario clock, event log, verdict flash, number keys.
+const Console=(()=>{
+  const $=id=>document.getElementById(id);
+  const start=Date.now(), base=3*3600+42*60;           // scenario starts at 03:42:00 IST
+  const clock=()=>{const s=base+Math.floor((Date.now()-start)/1000);
+    return [Math.floor(s/3600)%24,Math.floor(s/60)%60,s%60].map(n=>String(n).padStart(2,'0')).join(':');};
+  const tick=()=>{const c=$('clock'); if(c) c.textContent=clock()+" IST";};
+  tick(); setInterval(tick,1000);
+
+  let shown=null, pending=null, timer=null;
+  // level: verdict word; tone: 'ok' | 'warn' | 'crit'. Logged once the verdict settles (no spam while dragging a slider).
+  function report(level,msg,tone){
+    const key=level+"|"+msg; if(key===pending) return;   // same verdict again (e.g. live stream): keep the timer running
+    pending=key; clearTimeout(timer);
+    timer=setTimeout(()=>{ if(pending===shown) return; shown=pending; add(level,msg,tone); if(tone==='crit') flash(); },260);
+  }
+  function add(level,msg,tone){
+    const ul=$('log'); if(!ul) return;
+    const e=ul.querySelector('.empty'); if(e) e.remove();
+    const li=document.createElement('li'); li.className=tone;
+    li.innerHTML='<time></time><b></b><span></span>';
+    li.children[0].textContent=clock(); li.children[1].textContent=level; li.children[2].textContent=msg;
+    ul.prepend(li); while(ul.children.length>6) ul.lastElementChild.remove();
+  }
+  function flash(){const v=$('verdict'); if(!v) return; v.classList.remove('flash'); void v.offsetWidth; v.classList.add('flash');}
+  function keys(buttons,extra){
+    document.addEventListener('keydown',e=>{
+      if(e.target.matches('input,select,textarea')||e.ctrlKey||e.metaKey||e.altKey) return;
+      const n=parseInt(e.key,10);
+      if(n>=1&&n<=buttons.length){buttons[n-1].click();e.preventDefault();}
+      else if(extra) extra(e);
+    });
+  }
+  return {report,keys};
+})();
+
+</script>
+</body>
+</html>

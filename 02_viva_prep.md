@@ -35,7 +35,10 @@ No known quantum algorithm breaks it efficiently. ML-KEM (FIPS 203) is a lattice
 An attacker records encrypted traffic today and stores it until a quantum computer can decrypt it. Downgrade attacks are therefore worth stopping now, before such computers exist.
 
 **3. Why check the key share length as well as the group?**
-An attacker could keep the hybrid group ID (0x11EC) but cut the ML-KEM bytes. The client share for X25519MLKEM768 is 1216 bytes: 1184 for the ML-KEM-768 encapsulation key and 32 for X25519. A shorter share means the ML-KEM part is missing.
+An attacker who controls a TLS-terminating proxy could keep the hybrid group ID (0x11EC) but cut the ML-KEM bytes. The client share for X25519MLKEM768 is 1216 bytes: 1184 for the ML-KEM-768 encapsulation key and 32 for X25519. A shorter share means the ML-KEM part is missing.
+
+**3a. Doesn't TLS 1.3 already stop someone changing the handshake?**
+Yes, against a plain eavesdropper. TLS 1.3 signs the whole handshake transcript, so edits in transit make the handshake fail. The attack in my scenario needs a box that terminates TLS, such as a compromised inspection proxy, or an endpoint misconfigured to accept classical-only groups. That's why the guard runs at the gateway and checks what was actually negotiated.
 
 **4. Why use physics instead of malware signatures?**
 Signatures only match malware that has been seen before. New or self-modifying malware has no signature. A turbine near rated speed will always run hot, whoever wrote the malware. If the reported values break that rule, the data is false. Stuxnet worked by replaying normal readings, which is the case this check covers.

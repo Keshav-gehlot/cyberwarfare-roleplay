@@ -7,7 +7,9 @@ Runs with Python 3 only. No packages or network needed.
 A hybrid TLS 1.3 handshake (X25519MLKEM768) sends an ML-KEM-768 key and an
 X25519 key together. If an attacker removes the ML-KEM part, the session is
 protected by X25519 alone, which a future quantum computer could break. The
-attacker can record the traffic now and decrypt it later.
+attacker can record the traffic now and decrypt it later. TLS 1.3 signs the
+handshake, so this needs a TLS-terminating proxy the attacker controls (or a
+misconfigured endpoint); a plain eavesdropper can't edit it unnoticed.
 
 This script flags a session when:
   1. it uses a classical-only group (X25519 or secp256r1) while post-quantum
